@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mente Sã</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-calma">
+        <div class="container">
+            <a class="navbar-brand text-calma" href="#">Mente Sã</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.__class__.__name__ == 'Usuario' %}
+                        <li class="nav-item"><a class="nav-link text-calma" href="/forum"><i class="bi bi-chat-square-text"></i> Fórum</a></li>
+                        <li class="nav-item"><a class="nav-link text-calma" href="/meditacoes"><i class="bi bi-headphones"></i> Meditações</a></li>
+                    {% elif current_user.__class__.__name__ == 'Administrador' %}
+                        <li class="nav-item"><a class="nav-link text-calma" href="/gerenciar_profissionais"><i class="bi bi-person-check"></i> Profissionais</a></li>
+                        <li class="nav-item"><a class="nav-link text-calma" href="/moderar_conteudo"><i class="bi bi-shield-check"></i> Moderação</a></li>
+                    {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link text-calma" href="#" id="notificacoesDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-bell"></i>
+                            {% if notificacoes|length > 0 %}
+                                <span class="badge bg-danger rounded-pill">{{ notificacoes|length }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificacoesDropdown">
+                            {% for notificacao in notificacoes %}
+                                <li>
+                                    <div class="dropdown-item">
+                                        {{ notificacao.mensagem }}<br>
+                                        <small>{{ notificacao.data.strftime('%d/%m/%Y %H:%M') }}</small>
+                                        <form method="POST" action="{{ url_for('marcar_notificacao_lida', notificacao_id=notificacao.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-link p-0 text-primary">Marcar como lida</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link text-calma" href="/logout"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 class="text-calma mb-4">Bem-vindo ao Mente Sã, {{ current_user.nome }}</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="row">
+            {% if current_user.__class__.__name__ == 'Usuario' %}
+                <div class="col-md-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Agendar Sessão</h5>
+                            <form method="POST" action="/agendar_sessao">
+                                <div class="mb-3">
+                                    <select name="profissional_id" class="form-select" required>
+                                        {% for prof in profissionais %}
+                                            <option value="{{ prof.id }}">{{ prof.nome }} ({{ prof.especialidade }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <input type="datetime-local" name="data_hora" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Agendar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Meditações Guiadas</h5>
+                            <a href="/meditacoes" class="btn btn-primary">Acessar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Fórum de Apoio</h5>
+                            <a href="/forum" class="btn btn-primary">Entrar</a>
+                        </div>
+                    </div>
+                </div>
+            {% elif current_user.__class__.__name__ == 'Profissional' %}
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Minhas Sessões</h5>
+                            {% for sessao in sessoes %}
+                                <p>{{ sessao.data_hora.strftime('%d/%m/%Y %H:%M') }} - {{ sessao.usuario.nome }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Chats</h5>
+                            {% for sessao in sessoes %}
+                                <a href="{{ url_for('chat', usuario_id=sessao.usuario_id) }}" class="btn btn-primary mb-2">{{ sessao.usuario.nome }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% elif current_user.__class__.__name__ == 'Administrador' %}
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Gerenciar Profissionais</h5>
+                            {% for prof in profissionais_pendentes %}
+                                <p>{{ prof.nome }} ({{ prof.especialidade }}) - Pendente</p>
+                            {% endfor %}
+                            <a href="/gerenciar_profissionais" class="btn btn-primary">Gerenciar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-calma">Moderar Conteúdo</h5>
+                            <a href="/moderar_conteudo" class="btn btn-primary">Moderar</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

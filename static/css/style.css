@@ -1,0 +1,26 @@
+body {
+    background-color: #f0f4f8;
+    font-family: 'Arial', sans-serif;
+}
+
+.navbar, .card {
+    background-color: #e6f0fa;
+}
+
+.btn-primary {
+    background-color: #6b7280;
+    border-color: #6b7280;
+}
+
+.btn-primary:hover {
+    background-color: #4b5563;
+    border-color: #4b5563;
+}
+
+.text-calma {
+    color: #2c5282;
+}
+
+.bg-calma {
+    background-color: #dbeafe;
+}

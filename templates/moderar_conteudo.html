@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Moderar Conteúdo - Mente Sã</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-calma">
+        <div class="container">
+            <a class="navbar-brand text-calma" href="/dashboard">Mente Sã</a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link text-calma" href="#" id="notificacoesDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell"></i>
+                        {% if notificacoes|length > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ notificacoes|length }}</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% for notificacao in notificacoes %}
+                            <li>
+                                <div class="dropdown-item">
+                                    {{ notificacao.mensagem }}<br>
+                                    <small>{{ notificacao.data.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    <form method="POST" action="{{ url_for('marcar_notificacao_lida', notificacao_id=notificacao.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-link p-0 text-primary">Marcar como lida</button>
+                                    </form>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link text-calma" href="/logout"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1 class="text-calma mb-4">Moderar Conteúdo</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% for forum in foruns %}
+            <h3>{{ forum.titulo }}</h3>
+            {% for postagem in forum.postagens %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <p>{{ postagem.conteudo }}</p>
+                        <small>Por {{ postagem.usuario.nome }} em {{ postagem.data.strftime('%d/%m/%Y %H:%M') }}</small>
+                        <form method="POST" class="d-inline">
+                            <input type="hidden" name="postagem_id" value="{{ postagem.id }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
